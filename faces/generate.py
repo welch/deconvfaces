@@ -75,8 +75,13 @@ class GenParser:
         Generate network inputs for a single image.
         """
 
+        params['num_images'] = 1
         if params['id'] is None:
             params['id'] = 0
+        elif params['id'] < 0:
+            params['id'] = 0
+            params['num_images'] = params['num_ids'] # show all identities
+
         if params['em'] is None:
             params['em'] = 'neutral'
         if params['or'] is None:
@@ -88,23 +93,28 @@ class GenParser:
 
         if params['dataset'] == 'YALE':
             inputs = {
-                'identity': np.empty((1, params['num_ids'])),
-                'pose': np.empty((1, NUM_YALE_POSES)),
-                'lighting': np.empty((1, 4)),
+                'identity': np.empty((params['num_images'], params['num_ids'])),
+                'pose': np.empty((params['num_images'], NUM_YALE_POSES)),
+                'lighting': np.empty((params['num_images'], 4)),
             }
-            inputs['identity'][0,:] = self.identity_vector(params['id'], params)
-            inputs['pose'][0,:] = self.pose_vector(params['ps'], params)
-            inputs['lighting'][0,:] = self.lighting_vector(params['lt'], params)
+            for i in range(params['num_images']):
+                inputs['identity'][i,:] = self.identity_vector(
+                    params['id'] + i, params)
+                inputs['pose'][i,:] = self.pose_vector(params['ps'], params)
+            inputs['lighting'][i,:] = self.lighting_vector(params['lt'], params)
         else:
             inputs = {
-                'identity': np.empty((1, params['num_ids'])),
-                'emotion': np.empty((1, Emotion.length())),
-                'orientation': np.empty((1, 2)),
+                'identity': np.empty((params['num_images'], params['num_ids'])),
+                'emotion': np.empty((params['num_images'], Emotion.length())),
+                'orientation': np.empty((params['num_images'], 2)),
             }
-
-            inputs['identity'][0,:] = self.identity_vector(params['id'], params)
-            inputs['emotion'][0,:] = self.emotion_vector(params['em'], params)
-            inputs['orientation'][0,:] = self.orientation_vector(params['or'], params)
+            for i in range(params['num_images']):
+                inputs['identity'][i,:] = self.identity_vector(
+                    params['id'] + i, params)
+                inputs['emotion'][i,:] = self.emotion_vector(
+                    params['em'], params)
+                inputs['orientation'][i,:] = self.orientation_vector(
+                    params['or'], params)
 
         return inputs
 
